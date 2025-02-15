@@ -6,34 +6,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { numsvg } from './ui/numsvg'
 import coinDisplay from '../assets/coin.png'
-import { Button } from './ui/button';
+import { cn } from '@/lib/utils'
 
-const games = [
-  {key: "original", label: "Original"},
-  {key: "21takeaway", label: "21 Take-Away"},
-  {key: "pokernim", label: "Poker Nim"},
-  {key: "grundy", label: "Grundy's Game"},
-];
+import { ConfigProps } from './config'
 
-function Config({ 
-  variation, 
-  setVariation 
-}: { 
-  variation: string;
-  setVariation: (value: string) => void;
-}) {
-  return (
-    <Select value={variation} onValueChange={setVariation}>
-      <SelectTrigger className='w-[180px]'>
-        <SelectValue placeholder='Select Variation' />
-      </SelectTrigger>
-      <SelectContent>
-        {games.map((game) => <SelectItem key={game.key} value={game.key}>{game.label}</SelectItem>)}
-      </SelectContent>
-    </Select>
-  );
-};
 
 function Coin() {
   return <img src={coinDisplay} className='w-6 md:w-12 select-none'/>
@@ -58,11 +37,11 @@ function Piles({
     <div>
       <div className='flex flex-col gap-y-2'>
         {piles.map((coins, index) => (
-          coins ?
+          coins &&
           <div className='flex items-center' key={index}>
-            <div className='text-xl'>Pile {index + 1}:&emsp;</div>
+            {numsvg[index + 1]}&emsp;
             <Pile coins={coins}/>
-          </div> : null
+          </div>
         ))}
       </div>
     </div>
@@ -70,100 +49,148 @@ function Piles({
 };
 
 function Play({
-  variation,
+  config,
   piles,
   setPiles,
   selectedPile,
   setSelectedPile,
   remove,
-  setRemove
+  setRemove,
+  moves,
+  setMoves,
+  player,
+  setPlayer,
+  winner,
+  setWinner,
 }: { 
-  variation: string;
+  config: ConfigProps;
   piles: Array<number>;
   setPiles: (value: Array<number>) => void;
   selectedPile: string;
   setSelectedPile: (value: string) => void;
   remove: string;
   setRemove: (value: string) => void;
+  moves: Array<string>;
+  setMoves: (value: Array<string>) => void;
+  player: boolean;
+  setPlayer: (value: boolean) => void;
+  winner: string;
+  setWinner: (value: string) => void;
 }) {
-  const availablePile = piles.map((coins, index) => coins ? `Pile ${index + 1}` : null)
+  const availablePile = piles.map((coins, index) => coins ? `Pile ${index + 1}` : null);
+
+  const checkWin = (arr: Array<number>) => {
+    let win = true;
+    arr.forEach((i, idx) => {
+      console.log(i, idx)
+      win = win && (i === 0)
+    });
+    console.log("win", win)
+    return win;
+  };
 
   const handleClick = () => {
     const nextPiles = piles.map((coins, i) => {
       if (i === Number(selectedPile.split(" ")[1]) - 1) return coins - Number(remove);
       else return coins;
     });
+    if (checkWin(nextPiles)) {
+      setWinner(!player ? config.player1 : config.player2);
+    }
+    setMoves([...moves, `${!player ? config.player1 : config.player2} removes ${remove} coin${Number(remove) > 1 ? 's' : ''} from ${selectedPile.toLowerCase()}.`])
     setPiles(nextPiles);
-    setSelectedPile("Unselected");
-    setRemove("0");
-  }
+    setSelectedPile("");
+    setRemove("");
+    setPlayer(!player);
+  };
 
   return (
-    <div className='md:flex gap-4'>
-      <Select value={selectedPile} onValueChange={setSelectedPile} disabled={variation === ""}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Select Variation" />
+    <div className='flex flex-col md:flex-row gap-4 w-full items-center justify-center'>
+      <Select value={selectedPile} onValueChange={setSelectedPile} disabled={config.variation === "" || winner !== ""}>
+        <SelectTrigger className="">
+          <SelectValue placeholder="Which Pile?" />
         </SelectTrigger>
         <SelectContent>
           {availablePile.map((pile, index) => pile !== null ? <SelectItem key={index} value={pile}>{pile}</SelectItem> : null)}
         </SelectContent>
       </Select>
 
-      <Select value={remove} onValueChange={setRemove} disabled={selectedPile === "Unselected"}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Select Variation" />
+      <Select value={remove} onValueChange={setRemove} disabled={selectedPile === ""}>
+        <SelectTrigger className="">
+          <SelectValue placeholder="Number of Coins?" />
         </SelectTrigger>
         <SelectContent>
-          {variation === "21takeaway" ? 
+          {config.variation === "21takeaway" &&
             [...Array(Math.min(3, Number(selectedPile.split(" ")[1]) ? piles[Number(selectedPile.split(" ")[1]) - 1] : 3)).keys()]
             .map((x, index) => 
               <SelectItem key={index} value={(x + 1).toString()}>
                 {(x + 1).toString()}
               </SelectItem>
-            ) : null}
-          {variation === "original" ? 
+            )}
+          {config.variation === "original" &&
             [...Array(piles[Number(selectedPile.split(" ")[1]) - 1]).keys()]
             .map((x, index) => 
               <SelectItem key={index} value={(x + 1).toString()}>
                 {(x + 1).toString()}
               </SelectItem>
-            ) : null}
+            )}
         </SelectContent>
       </Select>
 
-      <Button disabled={remove === "0"} onClick={handleClick}>Go!</Button>
+      <Button className='w-full md:w-3/5' disabled={remove === ""} onClick={handleClick}>Go!</Button>
     </div>
   );
 };
 
-export default function Board() {
-  const [variation, setVariation] = useState<string>("");
+export default function Board({
+  config,
+  moves,
+  setMoves,
+  winner,
+  setWinner
+}: {
+  config: ConfigProps;
+  moves: Array<string>;
+  setMoves: (value: Array<string>) => void;
+  winner: string;
+  setWinner: (value: string) => void;
+}) {
   const [piles, setPiles] = useState<Array<number>>([]);
-  const [selectedPile, setSelectedPile] = useState<string>("Unselected");
-  const [remove, setRemove] = useState<string>("0");
+  const [selectedPile, setSelectedPile] = useState<string>("");
+  const [remove, setRemove] = useState<string>("");
+  const [player, setPlayer] = useState<boolean>(false);
 
   useEffect(() => {
-    if (variation === "original") setPiles([1, 3, 5, 7]);
-    else if (variation === "21takeaway") setPiles([21]);
-    else if (variation === "pokernim") setPiles([1, 3, 5, 7]);
-    else if (variation === "grundy") setPiles([20]);
-    setSelectedPile("Unselected");
-    setRemove("0");
-  }, [variation]);
+    if (config.variation === "original") setPiles([1, 3, 5, 7]);
+    else if (config.variation === "21takeaway") setPiles([21]);
+    else if (config.variation === "pokernim") setPiles([1, 3, 5, 7]);
+    else if (config.variation === "grundy") setPiles([20]);
+    setSelectedPile("");
+    setRemove("");
+    setPlayer(false);
+  }, [config]);
 
   return (
     <div>
-      <Config variation={variation} setVariation={setVariation} />
-      <Piles piles={piles} />
-      <Play 
-        variation={variation}
-        piles={piles}
-        setPiles={setPiles}
-        selectedPile={selectedPile}
-        setSelectedPile={setSelectedPile}
-        remove={remove}
-        setRemove={setRemove}
-      />
+      <div className={cn(config.mode === "" ? 'hidden' : 'block')}>
+        <Piles piles={piles} />
+        <div className='m-4 md:m-8' />
+        <Play 
+          config={config}
+          piles={piles}
+          setPiles={setPiles}
+          selectedPile={selectedPile}
+          setSelectedPile={setSelectedPile}
+          remove={remove}
+          setRemove={setRemove}
+          moves={moves}
+          setMoves={setMoves}
+          player={player}
+          setPlayer={setPlayer}
+          winner={winner}
+          setWinner={setWinner}
+        />
+      </div>
     </div>
   );
 };
