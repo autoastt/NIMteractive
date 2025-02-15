@@ -37,11 +37,11 @@ function Piles({
     <div>
       <div className='flex flex-col gap-y-2'>
         {piles.map((coins, index) => (
-          coins &&
+          coins ?
           <div className='flex items-center' key={index}>
             {numsvg[index + 1]}&emsp;
             <Pile coins={coins}/>
-          </div>
+          </div> : null
         ))}
       </div>
     </div>
