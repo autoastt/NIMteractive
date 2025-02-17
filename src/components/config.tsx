@@ -1,13 +1,13 @@
-"use client"
-import { Dices, Settings2 } from "lucide-react"
+"use client";
+import { Dices, Settings2 } from "lucide-react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -26,13 +26,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { toast } from "sonner"
-import { games } from "@/lib/constants"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { toast } from "sonner";
+import { games } from "@/lib/constants";
 
 const formSchema = z.object({
   variation: z.string({
@@ -41,16 +41,22 @@ const formSchema = z.object({
   mode: z.string({
     required_error: "Please select game mode.",
   }),
-  player1: z.string().min(1, { message: "Player's name is required" }).max(20, { message: "Player's name must contain at most 20 character(s)" }),
-  player2: z.string().min(1, { message: "Player's name is required" }).max(20, { message: "Player's name must contain at most 20 character(s)" }),
+  player1: z
+    .string()
+    .min(1, { message: "Player's name is required" })
+    .max(20, { message: "Player's name must contain at most 20 character(s)" }),
+  player2: z
+    .string()
+    .min(1, { message: "Player's name is required" })
+    .max(20, { message: "Player's name must contain at most 20 character(s)" }),
 });
 
-export interface ConfigProps { 
-  variation: string; 
+export interface ConfigProps {
+  variation: string;
   mode: string;
   player1: string;
   player2: string;
-};
+}
 
 export function Config({
   config,
@@ -71,26 +77,46 @@ export function Config({
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const promise = () => new Promise((resolve) => setTimeout(() => resolve({ name: 'Sonner' }), 500));
+      const promise = () =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve({ name: "Sonner" }), 500),
+        );
       toast.promise(promise, {
-        loading: 'Loading...',
+        loading: "Loading...",
         success: () => {
-          setConfig({ variation: values.variation, mode: values.mode, player1: values.player1, player2: values.player2})
-          return 'Changes Save!';
+          setConfig({
+            variation: values.variation,
+            mode: values.mode,
+            player1: values.player1,
+            player2: values.player2,
+          });
+          return "Changes Save!";
         },
-        error: 'Error',
+        error: "Error",
       });
     } catch (error) {
       console.error("Form submission error", error);
       toast.error("Failed to submit the form. Please try again.");
     }
-  };
+  }
 
   return (
     <div>
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline">{config.variation === "" || winner !== "" ? <><Dices />Start Here!</> : <><Settings2 />Settings</>}</Button>
+          <Button variant="outline">
+            {config.variation === "" || winner !== "" ? (
+              <>
+                <Dices />
+                Start Here!
+              </>
+            ) : (
+              <>
+                <Settings2 />
+                Settings
+              </>
+            )}
+          </Button>
         </DialogTrigger>
         <DialogContent className="max-w-72 sm:max-w-[475px]">
           <DialogHeader>
@@ -102,21 +128,27 @@ export function Config({
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="">
-              
               <FormField
                 control={form.control}
                 name="variation"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Variation</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select variation" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {games.map((game) => <SelectItem key={game} value={game}>{game}</SelectItem>)}
+                        {games.map((game) => (
+                          <SelectItem key={game} value={game}>
+                            {game}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormDescription />
@@ -124,14 +156,17 @@ export function Config({
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="mode"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Mode</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select mode" />
@@ -147,7 +182,7 @@ export function Config({
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="player1"
@@ -155,17 +190,14 @@ export function Config({
                   <FormItem>
                     <FormLabel>Player 1</FormLabel>
                     <FormControl>
-                      <Input 
-                      placeholder="autoastt"
-                      type="text"
-                      {...field} />
+                      <Input placeholder="autoastt" type="text" {...field} />
                     </FormControl>
                     <FormDescription />
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 disabled={form.watch("mode") === "one"}
                 control={form.control}
@@ -174,10 +206,11 @@ export function Config({
                   <FormItem>
                     <FormLabel>Player 2</FormLabel>
                     <FormControl>
-                      <Input 
-                      placeholder="Bob the Conquerer"
-                      type="text"
-                      {...field} />
+                      <Input
+                        placeholder="Bob the Conquerer"
+                        type="text"
+                        {...field}
+                      />
                     </FormControl>
                     <FormDescription></FormDescription>
                     <FormMessage />
@@ -197,4 +230,4 @@ export function Config({
       </Dialog>
     </div>
   );
-};
+}
