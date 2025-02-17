@@ -7,47 +7,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { numsvg } from './ui/numsvg'
-import coinDisplay from '../assets/coin.png'
 import { cn } from '@/lib/utils'
 
 import { ConfigProps } from './config'
 import { UserRound } from 'lucide-react'
 
-
-function Coin() {
-  return <img src={coinDisplay} className='w-6 md:w-12 select-none'/>
-};
-
-function Pile({ coins }: { coins: number; }) {
-  return (
-    <div className='flex flex-wrap gap-2 max-w-56 md:max-w-xl'>
-      {Array(coins).fill(true).map((_, index) => (
-        <Coin key={index}/>
-      ))}
-    </div>
-  );
-};
-
-function Piles({ 
-  piles, 
-}: { 
-  piles: Array<number>; 
-}) {
-  return (
-    <div>
-      <div className='flex flex-col gap-y-2'>
-        {piles.map((coins, index) => (
-          coins ?
-          <div className='flex items-center' key={index}>
-            {numsvg[index + 1]}&emsp;
-            <Pile coins={coins}/>
-          </div> : null
-        ))}
-      </div>
-    </div>
-  );
-};
+import { Piles } from './piles'
 
 function Play({
   config,
@@ -78,27 +43,28 @@ function Play({
   winner: string;
   setWinner: (value: string) => void;
 }) {
-  const availablePile = piles.map((coins, index) => coins ? `Pile ${index + 1}` : null);
+  const availablePile = config.variation !== "Grundy's Game" ? piles.map((coins, index) => coins ? `Pile ${index + 1}` : null) : piles.map((coins, index) => coins > 2 ? `Pile ${index + 1}` : null);
 
   const checkWin = (arr: Array<number>) => {
     let win = true;
-    arr.forEach((i, idx) => {
-      console.log(i, idx)
-      win = win && (i === 0)
-    });
-    console.log("win", win)
+    if (config.variation === "Grundy's Game") arr.forEach((i) => win = win && (i <= 2))
+    else arr.forEach((i) => win = win && (i === 0));
     return win;
   };
 
   const handleClick = () => {
-    const nextPiles = piles.map((coins, i) => {
+    const nextPiles = config.variation !== "Grundy's Game" ? piles.map((coins, i) => {
       if (i === Number(selectedPile.split(" ")[1]) - 1) return coins - Number(remove);
       else return coins;
-    });
+    }) : [...piles.map((coins, i) => {
+      if (i === Number(selectedPile.split(" ")[1]) - 1) return Number(remove);
+      else return coins;
+    }), piles[Number(selectedPile.split(" ")[1]) - 1] - Number(remove)];
     if (checkWin(nextPiles)) {
       setWinner(!player ? config.player1 : config.player2);
     }
-    setMoves([...moves, `${!player ? config.player1 : config.player2} removes ${remove} coin${Number(remove) > 1 ? 's' : ''} from ${selectedPile.toLowerCase()}.`])
+    if (config.variation === "Grundy's Game") setMoves([...moves, `${!player ? config.player1 : config.player2} splits ${selectedPile.toLowerCase()} into ${remove} coin${Number(remove) > 1 ? 's' : ''} and ${piles[Number(selectedPile.split(" ")[1]) - 1] - Number(remove)} coin${piles[Number(selectedPile.split(" ")[1]) - 1] - Number(remove) > 1 ? 's' : ''}.`])
+    else setMoves([...moves, `${!player ? config.player1 : config.player2} removes ${remove} coin${Number(remove) > 1 ? 's' : ''} from ${selectedPile.toLowerCase()}.`])
     setPiles(nextPiles);
     setSelectedPile("");
     setRemove("");
@@ -135,6 +101,14 @@ function Play({
                 {(x + 1).toString()}
               </SelectItem>
           )}
+          {config.variation === "Grundy's Game" &&
+            [...Array(Math.max(1, Number(selectedPile.split(" ")[1]) ? Math.floor((piles[Number(selectedPile.split(" ")[1]) - 1] - 1) / 2) : 0)).keys()]
+            .map((x, index) => 
+              <SelectItem key={index} value={(x + 1).toString()}>
+                {(x + 1).toString() + " / " + (piles[Number(selectedPile.split(" ")[1]) - 1] - x - 1).toString()}
+              </SelectItem>
+            )
+          }
         </SelectContent>
       </Select>
 

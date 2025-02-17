@@ -167,6 +167,7 @@ export function Config({
               />
               
               <FormField
+                disabled={form.watch("mode") === "one"}
                 control={form.control}
                 name="player2"
                 render={({ field }) => (
