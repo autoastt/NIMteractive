@@ -32,13 +32,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { toast } from "sonner"
-
-const games = [
-  {key: "original", label: "Original"},
-  {key: "21takeaway", label: "21 Take-Away"},
-  {key: "pokernim", label: "Poker Nim"},
-  {key: "grundy", label: "Grundy's Game"},
-];
+import { games } from "@/lib/constants"
 
 const formSchema = z.object({
   variation: z.string({
@@ -47,8 +41,8 @@ const formSchema = z.object({
   mode: z.string({
     required_error: "Please select game mode.",
   }),
-  player1: z.string().max(20),
-  player2: z.string().max(20),
+  player1: z.string().min(1, { message: "Player's name is required" }).max(20, { message: "Player's name must contain at most 20 character(s)" }),
+  player2: z.string().min(1, { message: "Player's name is required" }).max(20, { message: "Player's name must contain at most 20 character(s)" }),
 });
 
 export interface ConfigProps { 
@@ -122,7 +116,7 @@ export function Config({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {games.map((game) => <SelectItem key={game.key} value={game.key}>{game.label}</SelectItem>)}
+                        {games.map((game) => <SelectItem key={game} value={game}>{game}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     <FormDescription />
@@ -144,7 +138,7 @@ export function Config({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="one">One Player</SelectItem>
+                        <SelectItem value="one">Single Player</SelectItem>
                         <SelectItem value="two">Two Players</SelectItem>
                       </SelectContent>
                     </Select>

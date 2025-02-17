@@ -12,6 +12,7 @@ import coinDisplay from '../assets/coin.png'
 import { cn } from '@/lib/utils'
 
 import { ConfigProps } from './config'
+import { UserRound } from 'lucide-react'
 
 
 function Coin() {
@@ -120,20 +121,20 @@ function Play({
           <SelectValue placeholder="Number of Coins?" />
         </SelectTrigger>
         <SelectContent>
-          {config.variation === "21takeaway" &&
-            [...Array(Math.min(3, Number(selectedPile.split(" ")[1]) ? piles[Number(selectedPile.split(" ")[1]) - 1] : 3)).keys()]
-            .map((x, index) => 
-              <SelectItem key={index} value={(x + 1).toString()}>
-                {(x + 1).toString()}
-              </SelectItem>
-            )}
-          {config.variation === "original" &&
+          {config.variation === "Original" &&
             [...Array(piles[Number(selectedPile.split(" ")[1]) - 1]).keys()]
             .map((x, index) => 
               <SelectItem key={index} value={(x + 1).toString()}>
                 {(x + 1).toString()}
               </SelectItem>
-            )}
+          )}
+          {config.variation === "21 Take-Away" &&
+            [...Array(Math.min(3, Number(selectedPile.split(" ")[1]) ? piles[Number(selectedPile.split(" ")[1]) - 1] : 3)).keys()]
+            .map((x, index) => 
+              <SelectItem key={index} value={(x + 1).toString()}>
+                {(x + 1).toString()}
+              </SelectItem>
+          )}
         </SelectContent>
       </Select>
 
@@ -161,10 +162,10 @@ export default function Board({
   const [player, setPlayer] = useState<boolean>(false);
 
   useEffect(() => {
-    if (config.variation === "original") setPiles([1, 3, 5, 7]);
-    else if (config.variation === "21takeaway") setPiles([21]);
-    else if (config.variation === "pokernim") setPiles([1, 3, 5, 7]);
-    else if (config.variation === "grundy") setPiles([20]);
+    if (config.variation === "Original") setPiles([1, 3, 5, 7]);
+    else if (config.variation === "21 Take-Away") setPiles([21]);
+    else if (config.variation === "Poker Nim") setPiles([1, 3, 5, 7]);
+    else if (config.variation === "Grundy's Game") setPiles([20]);
     setSelectedPile("");
     setRemove("");
     setPlayer(false);
@@ -174,7 +175,9 @@ export default function Board({
     <div>
       <div className={cn(config.mode === "" ? 'hidden' : 'block')}>
         <Piles piles={piles} />
-        <div className='m-4 md:m-8' />
+        <div className='flex gap-2 font-semibold mb-2 md:mb-4 mt-8'>
+          <UserRound />{!player ? config.player1 : config.player2}'s Turn
+        </div>
         <Play 
           config={config}
           piles={piles}
