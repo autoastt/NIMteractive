@@ -1,12 +1,14 @@
 import { ConfigProps } from "@/components/config";
 
+const g = [0, 0, 0, 1, 0, 2, 1, 0, 2, 1, 0];
+
 export function bestMove(variation: string, piles: Array<number>) {
   const ret = { selectedPile: "", remove: "" };
+  let sum: number = 0;
+  const possibleMoves = [];
+  const possiblePiles = [];
   if (variation === "Original") {
-    let sum: number = 0;
     piles.forEach((i) => (sum ^= i));
-    const possibleMoves = [];
-    const possiblePiles = [];
     for (let i: number = 0; i < piles.length; i++) {
       if (piles[i] != 0) possiblePiles.push(i);
       for (let j: number = 1; j <= piles[i]; j++) {
@@ -14,7 +16,6 @@ export function bestMove(variation: string, piles: Array<number>) {
         possibleMoves.push({ selectedPile: i + 1, remove: j });
       }
     }
-    console.log("hi", possibleMoves);
     if (possibleMoves.length !== 0) {
       const k = Math.floor(Math.random() * possibleMoves.length);
       ret.selectedPile = "Pile " + possibleMoves[k].selectedPile.toString();
@@ -30,10 +31,26 @@ export function bestMove(variation: string, piles: Array<number>) {
     if (piles[0] % 4) {
       ret.remove = (piles[0] % 4).toString();
     } else ret.remove = (Math.floor(Math.random() * 3) + 1).toString();
+  } else if (variation === "Grundy's Game") {
+    piles.forEach((i) => (sum ^= g[i]));
+    for (let i: number = 0; i < piles.length; i++) {
+      if (piles[i] > 2) possiblePiles.push(i);
+      for (let j: number = 1; j <= (piles[i] - 1) / 2; j++) {
+        if (sum ^ g[piles[i]] ^ g[j] ^ g[piles[i] - j]) continue;
+        possibleMoves.push({ selectedPile: i + 1, remove: j });
+      }
+    }
+    if (possibleMoves.length !== 0) {
+      const k = Math.floor(Math.random() * possibleMoves.length);
+      ret.selectedPile = "Pile " + possibleMoves[k].selectedPile.toString();
+      ret.remove = possibleMoves[k].remove.toString();
+    } else {
+      const k = Math.floor(Math.random() * possiblePiles.length);
+      const x = Math.floor((Math.random() * (piles[k] - 1)) / 2) + 1;
+      ret.selectedPile = "Pile " + (k + 1).toString();
+      ret.remove = x.toString();
+    }
   }
-  // else if (variation === "Grundy's Game") {
-
-  // }
   return ret;
 }
 
@@ -106,17 +123,17 @@ export const botMove = async (
   if (config.mode === "one") {
     await delay(500);
     const move = bestMove(config.variation, nextPiles);
-    nextPiles = newPiles(config, nextPiles, move.selectedPile, move.remove);
-    nextMoves = newMoves(
-      config,
-      nextMoves,
-      player,
-      nextPiles,
-      move.selectedPile,
-      move.remove,
+    setPiles(newPiles(config, nextPiles, move.selectedPile, move.remove));
+    setMoves(
+      newMoves(
+        config,
+        nextMoves,
+        player,
+        nextPiles,
+        move.selectedPile,
+        move.remove,
+      ),
     );
-    setPiles(nextPiles);
-    setMoves(nextMoves);
     if (checkWin(config, nextPiles)) {
       setWinner(!player ? config.player1 : config.player2);
       return;

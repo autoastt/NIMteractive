@@ -17,7 +17,7 @@ export default function Spoilers() {
       <AccordionItem value="item-2">
         <AccordionTrigger>21 Take-Away</AccordionTrigger>
         <AccordionContent>
-          The losing position is when{" "}
+          The losing position is when&nbsp;
           <code className="px-2 bg-zinc-100 rounded-sm text-red-500">
             N % 4 == 0
           </code>
@@ -25,7 +25,12 @@ export default function Spoilers() {
       </AccordionItem>
       <AccordionItem value="item-3">
         <AccordionTrigger>Grundy's Game</AccordionTrigger>
-        <AccordionContent>State tree?</AccordionContent>
+        <AccordionContent>
+          Grundy value from a pile size 0 to 10 is&nbsp;
+          <code className="px-1 bg-zinc-100 rounded-sm text-red-500">
+            [0, 0, 0, 1, 0, 2, 1, 0, 2, 1, 0]
+          </code>
+        </AccordionContent>
       </AccordionItem>
     </Accordion>
   );

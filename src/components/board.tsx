@@ -205,9 +205,9 @@ export default function Board({
   return (
     <div>
       <div className={cn(config.mode === "" ? "hidden" : "block")}>
-        <Piles piles={piles} />
         {winner === "" ? (
           <>
+            <Piles piles={piles} />
             <div className="flex gap-2 font-semibold mb-2 md:mb-4 mt-8">
               <UserRound />
               {!player ? config.player1 : config.player2}'s Turn

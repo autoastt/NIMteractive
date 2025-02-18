@@ -105,18 +105,20 @@ export function Config({
         loading: "Loading...",
         success: () => {
           const st = values.start === "two";
-          setConfig({
+          const nextConfig = {
             variation: values.variation,
             mode: values.mode,
             player1: values.player1,
             player2:
               values.mode === "one" ? "Bob the Conquerer" : values.player2,
             start: st,
-          });
+          };
+          setConfig(nextConfig);
           setConfetti(false);
+          setWinner("");
           if (values.mode === "one" && st) {
             botMove(
-              config,
+              nextConfig,
               initialPiles[values.variation],
               setPiles,
               [],
@@ -131,7 +133,6 @@ export function Config({
             setRemove("");
             setMoves([]);
             setPlayer(st);
-            setWinner("");
           }
           return "Changes Save!";
         },
@@ -257,7 +258,7 @@ export function Config({
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="" />
+                              <SelectValue placeholder="Select player" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -327,7 +328,7 @@ export function Config({
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="" />
+                              <SelectValue placeholder="Select player" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
