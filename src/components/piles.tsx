@@ -1,17 +1,15 @@
 import coinDisplay from "../assets/coin.png";
 
 function Coin() {
-  return <img src={coinDisplay} className="w-6 md:w-12 select-none" />;
+  return <img src={coinDisplay} className="w-6 md:w-12" />;
 }
 
 function Pile({ coins }: { coins: number }) {
   return (
     <div className="flex flex-wrap gap-2 max-w-56 md:max-w-xl">
-      {Array(coins)
-        .fill(true)
-        .map((_, index) => (
-          <Coin key={index} />
-        ))}
+      {[...Array(coins).keys()].map((_, index) => (
+        <Coin key={index} />
+      ))}
     </div>
   );
 }
@@ -19,7 +17,7 @@ function Pile({ coins }: { coins: number }) {
 export function Piles({ piles }: { piles: Array<number> }) {
   return (
     <div>
-      <div className="flex flex-col gap-y-2 md:gap-y-4">
+      <div className="select-none flex flex-col gap-y-2 md:gap-y-4">
         {piles.map((coins, index) =>
           coins ? (
             <div className="flex items-center" key={index}>

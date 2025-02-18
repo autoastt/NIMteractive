@@ -25,21 +25,19 @@ function App() {
     mode: "",
     player1: "",
     player2: "",
+    start: false,
   });
+  const [piles, setPiles] = useState<Array<number>>([]);
+  const [selectedPile, setSelectedPile] = useState<string>("");
+  const [remove, setRemove] = useState<string>("");
   const [moves, setMoves] = useState<Array<string>>([]);
+  const [player, setPlayer] = useState<boolean>(config.start);
   const [winner, setWinner] = useState<string>("");
   const [confetti, setConfetti] = useState<boolean>(false);
   const { width, height } = useWindowSize();
 
   useEffect(() => {
-    setMoves([]);
-    setWinner("");
-    setConfetti(false);
-  }, [config]);
-
-  useEffect(() => {
     if (winner !== "") {
-      setMoves((m) => [...m, `Congratulations! The winner is ${winner}!!!`]);
       setConfetti(true);
     }
   }, [winner]);
@@ -56,7 +54,18 @@ function App() {
                 <AlignEndHorizontal />
                 {config.variation ? config.variation : "Nim"}
               </div>
-              <Config config={config} setConfig={setConfig} winner={winner} />
+              <Config
+                config={config}
+                setConfig={setConfig}
+                setPiles={setPiles}
+                setSelectedPile={setSelectedPile}
+                setRemove={setRemove}
+                setMoves={setMoves}
+                setPlayer={setPlayer}
+                winner={winner}
+                setWinner={setWinner}
+                setConfetti={setConfetti}
+              />
             </CardTitle>
             <CardDescription>
               {config.variation !== "" ? instruction[config.variation] : null}
@@ -65,8 +74,16 @@ function App() {
           <CardContent>
             <Board
               config={config}
+              piles={piles}
+              setPiles={setPiles}
+              selectedPile={selectedPile}
+              setSelectedPile={setSelectedPile}
+              remove={remove}
+              setRemove={setRemove}
               moves={moves}
               setMoves={setMoves}
+              player={player}
+              setPlayer={setPlayer}
               winner={winner}
               setWinner={setWinner}
             />

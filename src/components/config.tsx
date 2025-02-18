@@ -33,6 +33,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
 import { games } from "@/lib/constants";
+import { initialPiles } from "@/lib/constants";
+import { botMove } from "@/lib/actions";
 
 const formSchema = z.object({
   variation: z.string({
@@ -49,6 +51,7 @@ const formSchema = z.object({
     .string()
     .min(1, { message: "Player's name is required" })
     .max(20, { message: "Player's name must contain at most 20 character(s)" }),
+  start: z.string(),
 });
 
 export interface ConfigProps {
@@ -56,16 +59,31 @@ export interface ConfigProps {
   mode: string;
   player1: string;
   player2: string;
+  start: boolean;
 }
 
 export function Config({
   config,
   setConfig,
+  setPiles,
+  setSelectedPile,
+  setRemove,
+  setMoves,
+  setPlayer,
   winner,
+  setWinner,
+  setConfetti,
 }: {
   config: ConfigProps;
   setConfig: (value: ConfigProps) => void;
+  setPiles: (value: Array<number>) => void;
+  setSelectedPile: (value: string) => void;
+  setRemove: (value: string) => void;
+  setMoves: (value: Array<string>) => void;
+  setPlayer: (value: boolean) => void;
   winner: string;
+  setWinner: (value: string) => void;
+  setConfetti: (value: boolean) => void;
 }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -74,6 +92,8 @@ export function Config({
       player2: "Bob the Conquerer",
     },
   });
+
+  const watchMode = form.watch("mode");
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -84,12 +104,35 @@ export function Config({
       toast.promise(promise, {
         loading: "Loading...",
         success: () => {
+          const st = values.start === "two";
           setConfig({
             variation: values.variation,
             mode: values.mode,
             player1: values.player1,
-            player2: values.player2,
+            player2:
+              values.mode === "one" ? "Bob the Conquerer" : values.player2,
+            start: st,
           });
+          setConfetti(false);
+          if (values.mode === "one" && st) {
+            botMove(
+              config,
+              initialPiles[values.variation],
+              setPiles,
+              [],
+              setMoves,
+              st,
+              setPlayer,
+              setWinner,
+            );
+          } else {
+            setPiles(initialPiles[values.variation]);
+            setSelectedPile("");
+            setRemove("");
+            setMoves([]);
+            setPlayer(st);
+            setWinner("");
+          }
           return "Changes Save!";
         },
         error: "Error",
@@ -182,41 +225,122 @@ export function Config({
                   </FormItem>
                 )}
               />
+              {watchMode === "one" && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="player1"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Player</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="autoastt"
+                            type="text"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="start"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Who Start?</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="one">You</SelectItem>
+                            <SelectItem value="two">
+                              Bob the Conquerer
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          You will play against Bob the Conquerer
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+              {watchMode === "two" && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="player1"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Player 1</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="autoastt"
+                            type="text"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="player1"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Player 1</FormLabel>
-                    <FormControl>
-                      <Input placeholder="autoastt" type="text" {...field} />
-                    </FormControl>
-                    <FormDescription />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                disabled={form.watch("mode") === "one"}
-                control={form.control}
-                name="player2"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Player 2</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Bob the Conquerer"
-                        type="text"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription></FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="player2"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Player 2</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Bob the Conquerer"
+                            type="text"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription></FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="start"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Who Start?</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value={"one"}>Player 1</SelectItem>
+                            <SelectItem value={"two"}>Player 2</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
 
               <DialogFooter className="mt-6 flex flex-col gap-4 md:gap-0">
                 <Button type="submit">Save changes</Button>

@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -13,6 +12,7 @@ import { ConfigProps } from "@/components/config";
 import { UserRound } from "lucide-react";
 
 import { Piles } from "@/components/piles";
+import { botMove, checkWin, newMoves, newPiles } from "@/lib/actions";
 
 function Play({
   config,
@@ -48,47 +48,39 @@ function Play({
       ? piles.map((coins, index) => (coins ? `Pile ${index + 1}` : null))
       : piles.map((coins, index) => (coins > 2 ? `Pile ${index + 1}` : null));
 
-  const checkWin = (arr: Array<number>) => {
-    let win = true;
-    if (config.variation === "Grundy's Game")
-      arr.forEach((i) => (win = win && i <= 2));
-    else arr.forEach((i) => (win = win && i === 0));
-    return win;
-  };
-
-  const handleClick = () => {
-    const nextPiles =
-      config.variation !== "Grundy's Game"
-        ? piles.map((coins, i) => {
-            if (i === Number(selectedPile.split(" ")[1]) - 1)
-              return coins - Number(remove);
-            else return coins;
-          })
-        : [
-            ...piles.map((coins, i) => {
-              if (i === Number(selectedPile.split(" ")[1]) - 1)
-                return Number(remove);
-              else return coins;
-            }),
-            piles[Number(selectedPile.split(" ")[1]) - 1] - Number(remove),
-          ];
-    if (checkWin(nextPiles)) {
-      setWinner(!player ? config.player1 : config.player2);
-    }
-    if (config.variation === "Grundy's Game")
-      setMoves([
-        ...moves,
-        `${!player ? config.player1 : config.player2} splits ${selectedPile.toLowerCase()} into ${remove} coin${Number(remove) > 1 ? "s" : ""} and ${piles[Number(selectedPile.split(" ")[1]) - 1] - Number(remove)} coin${piles[Number(selectedPile.split(" ")[1]) - 1] - Number(remove) > 1 ? "s" : ""}.`,
-      ]);
-    else
-      setMoves([
-        ...moves,
-        `${!player ? config.player1 : config.player2} removes ${remove} coin${Number(remove) > 1 ? "s" : ""} from ${selectedPile.toLowerCase()}.`,
-      ]);
+  const handleClick = async () => {
+    const nextPiles = newPiles(config, piles, selectedPile, remove);
+    const nextMoves = newMoves(
+      config,
+      moves,
+      player,
+      piles,
+      selectedPile,
+      remove,
+    );
     setPiles(nextPiles);
+    setMoves(nextMoves);
     setSelectedPile("");
     setRemove("");
+
+    if (checkWin(config, nextPiles)) {
+      setWinner(!player ? config.player1 : config.player2);
+      return;
+    }
+
     setPlayer(!player);
+    if (config.mode === "one") {
+      botMove(
+        config,
+        nextPiles,
+        setPiles,
+        nextMoves,
+        setMoves,
+        !player,
+        setPlayer,
+        setWinner,
+      );
+    }
   };
 
   return (
@@ -183,55 +175,73 @@ function Play({
 
 export default function Board({
   config,
+  piles,
+  setPiles,
+  selectedPile,
+  setSelectedPile,
+  remove,
+  setRemove,
   moves,
   setMoves,
+  player,
+  setPlayer,
   winner,
   setWinner,
 }: {
   config: ConfigProps;
+  piles: Array<number>;
+  setPiles: (value: Array<number>) => void;
+  selectedPile: string;
+  setSelectedPile: (value: string) => void;
+  remove: string;
+  setRemove: (value: string) => void;
   moves: Array<string>;
   setMoves: (value: Array<string>) => void;
+  player: boolean;
+  setPlayer: (value: boolean) => void;
   winner: string;
   setWinner: (value: string) => void;
 }) {
-  const [piles, setPiles] = useState<Array<number>>([]);
-  const [selectedPile, setSelectedPile] = useState<string>("");
-  const [remove, setRemove] = useState<string>("");
-  const [player, setPlayer] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (config.variation === "Original") setPiles([1, 3, 5, 7]);
-    else if (config.variation === "21 Take-Away") setPiles([21]);
-    else if (config.variation === "Poker Nim") setPiles([1, 3, 5, 7]);
-    else if (config.variation === "Grundy's Game") setPiles([20]);
-    setSelectedPile("");
-    setRemove("");
-    setPlayer(false);
-  }, [config]);
-
   return (
     <div>
       <div className={cn(config.mode === "" ? "hidden" : "block")}>
         <Piles piles={piles} />
-        <div className="flex gap-2 font-semibold mb-2 md:mb-4 mt-8">
-          <UserRound />
-          {!player ? config.player1 : config.player2}'s Turn
-        </div>
-        <Play
-          config={config}
-          piles={piles}
-          setPiles={setPiles}
-          selectedPile={selectedPile}
-          setSelectedPile={setSelectedPile}
-          remove={remove}
-          setRemove={setRemove}
-          moves={moves}
-          setMoves={setMoves}
-          player={player}
-          setPlayer={setPlayer}
-          winner={winner}
-          setWinner={setWinner}
-        />
+        {winner === "" ? (
+          <>
+            <div className="flex gap-2 font-semibold mb-2 md:mb-4 mt-8">
+              <UserRound />
+              {!player ? config.player1 : config.player2}'s Turn
+            </div>
+            <Play
+              config={config}
+              piles={piles}
+              setPiles={setPiles}
+              selectedPile={selectedPile}
+              setSelectedPile={setSelectedPile}
+              remove={remove}
+              setRemove={setRemove}
+              moves={moves}
+              setMoves={setMoves}
+              player={player}
+              setPlayer={setPlayer}
+              winner={winner}
+              setWinner={setWinner}
+            />
+          </>
+        ) : (
+          <div className="font-semibold text-3xl">
+            <div className="flex gap-2">
+              <p className="from-blue-800 to-red-600 bg-gradient-to-r text-transparent bg-clip-text">
+                Congratulations
+              </p>
+              &nbsp;🎉
+            </div>{" "}
+            <p className="flex font-normal text-base lg:text-2xl my-4">
+              The winner is&nbsp;
+              <a className="font-medium underline">{winner}</a>!
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
