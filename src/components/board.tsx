@@ -70,7 +70,7 @@ function Play({
 
     setPlayer(!player);
     if (config.mode === "one") {
-      botMove(
+      await botMove(
         config,
         nextPiles,
         setPiles,

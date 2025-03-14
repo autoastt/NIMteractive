@@ -10,9 +10,10 @@ export function bestMove(variation: string, piles: Array<number>) {
   if (variation === "Original") {
     piles.forEach((i) => (sum ^= i));
     for (let i: number = 0; i < piles.length; i++) {
-      if (piles[i] != 0) possiblePiles.push(i);
+      if (piles[i] === 0) continue;
+      possiblePiles.push(i);
       for (let j: number = 1; j <= piles[i]; j++) {
-        if (sum ^ piles[i] ^ j) continue;
+        if (sum ^ piles[i] ^ (piles[i] - j)) continue;
         possibleMoves.push({ selectedPile: i + 1, remove: j });
       }
     }
@@ -22,8 +23,8 @@ export function bestMove(variation: string, piles: Array<number>) {
       ret.remove = possibleMoves[k].remove.toString();
     } else {
       const k = Math.floor(Math.random() * possiblePiles.length);
-      const x = Math.floor(Math.random() * piles[k]) + 1;
-      ret.selectedPile = "Pile " + (k + 1).toString();
+      const x = Math.floor(Math.random() * piles[possiblePiles[k]]) + 1;
+      ret.selectedPile = "Pile " + (possiblePiles[k] + 1).toString();
       ret.remove = x.toString();
     }
   } else if (variation === "21 Take-Away") {
@@ -123,7 +124,8 @@ export const botMove = async (
   if (config.mode === "one") {
     await delay(500);
     const move = bestMove(config.variation, nextPiles);
-    setPiles(newPiles(config, nextPiles, move.selectedPile, move.remove));
+    const nPiles = newPiles(config, nextPiles, move.selectedPile, move.remove);
+    setPiles(nPiles);
     setMoves(
       newMoves(
         config,
@@ -134,7 +136,7 @@ export const botMove = async (
         move.remove,
       ),
     );
-    if (checkWin(config, nextPiles)) {
+    if (checkWin(config, nPiles)) {
       setWinner(!player ? config.player1 : config.player2);
       return;
     }

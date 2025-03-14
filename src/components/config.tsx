@@ -103,7 +103,7 @@ export function Config({
         );
       toast.promise(promise, {
         loading: "Loading...",
-        success: () => {
+        success: async () => {
           const st = values.start === "two";
           const nextConfig = {
             variation: values.variation,
@@ -117,7 +117,7 @@ export function Config({
           setConfetti(false);
           setWinner("");
           if (values.mode === "one" && st) {
-            botMove(
+            await botMove(
               nextConfig,
               initialPiles[values.variation],
               setPiles,
